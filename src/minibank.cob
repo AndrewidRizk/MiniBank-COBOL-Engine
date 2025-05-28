@@ -5,7 +5,10 @@
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
            SELECT AccountFile ASSIGN TO "data/accounts.dat"
-               ORGANIZATION IS LINE SEQUENTIAL.
+               ORGANIZATION IS INDEXED
+               ACCESS MODE IS DYNAMIC
+               RECORD KEY IS Acc-ID
+               FILE STATUS IS WS-FILE-STATUS.
            SELECT DepositFile ASSIGN TO "data/deposit_request.txt"
                ORGANIZATION IS LINE SEQUENTIAL.
 
@@ -13,26 +16,24 @@
        FILE SECTION.
        FD AccountFile.
        01 Account-Record.
-           05 Acc-ID      PIC X(10).
-           05 Acc-Name    PIC X(20).
-           05 Balance     PIC 9(6)V99.
+           05 Acc-ID       PIC X(10).
+           05 Acc-Name     PIC X(20).
+           05 Balance      PIC 9(6)V99.
 
        FD DepositFile.
-       01 Deposit-Line   PIC X(80).
+       01 Deposit-Line     PIC X(80).
 
        WORKING-STORAGE SECTION.
-       01 WS-CHOICE       PIC 9.
-       01 WS-ID           PIC X(10).
-       01 WS-NAME         PIC X(20).
-       01 WS-AMOUNT       PIC 9(6)V99.
-       01 WS-FILE-END     PIC X VALUE 'N'.
-          88 EOF          VALUE 'Y'.
-          88 NOT-EOF      VALUE 'N'.
-       01 WS-FOUND        PIC X VALUE 'N'.
-          88 FOUND        VALUE 'Y'.
-          88 NOT-FOUND    VALUE 'N'.
-       01 WS-MODE         PIC X.            *> "D" or "W"
-       01 WS-DEPOSIT-ID   PIC X(10).
+       01 WS-CHOICE         PIC 9.
+       01 WS-ID             PIC X(10).
+       01 WS-NAME           PIC X(20).
+       01 WS-AMOUNT         PIC 9(6)V99.
+       01 WS-MODE           PIC X.  *> "D" or "W"
+       01 WS-FILE-STATUS    PIC XX.
+       01 WS-FOUND          PIC X VALUE 'N'.
+          88 FOUND          VALUE 'Y'.
+          88 NOT-FOUND      VALUE 'N'.
+       01 WS-DEPOSIT-ID     PIC X(10).
        01 WS-DEPOSIT-AMOUNT PIC X(10).
        01 WS-DEP-AMOUNT-NUM PIC 9(6)V99.
 
@@ -49,7 +50,8 @@
            DISPLAY "2. Deposit"
            DISPLAY "3. Withdraw"
            DISPLAY "4. Process Deposit File"
-           DISPLAY "5. Exit"
+           DISPLAY "5. Process Deposit File"
+           DISPLAY "6. Exit"
            DISPLAY "Enter Choice: "
            ACCEPT WS-CHOICE
            EVALUATE WS-CHOICE
@@ -57,7 +59,8 @@
              WHEN 2 PERFORM DEPOSIT
              WHEN 3 PERFORM WITHDRAW
              WHEN 4 PERFORM PROCESS-DEPOSIT-FILE
-             WHEN 5
+             WHEN 5 PERFORM DESPLAY-ACCOUNTS
+             WHEN 6
                DISPLAY "Goodbye!"
                STOP RUN
              WHEN OTHER
@@ -71,10 +74,15 @@
            MOVE 0 TO Balance
            MOVE WS-ID   TO Acc-ID
            MOVE WS-NAME TO Acc-Name
-           OPEN EXTEND AccountFile
-           WRITE Account-Record
-           CLOSE AccountFile
-           DISPLAY "Account Created!".
+           OPEN I-O AccountFile
+           READ AccountFile KEY IS Acc-ID
+               INVALID KEY
+                   WRITE Account-Record
+                   DISPLAY "Account Created!"
+               NOT INVALID KEY
+                   DISPLAY "Account already exists."
+           END-READ
+           CLOSE AccountFile.
 
        DEPOSIT.
            MOVE "D" TO WS-MODE
@@ -90,40 +98,39 @@
 
        UPDATE-BALANCE.
            OPEN I-O AccountFile
-           MOVE NOT-FOUND TO WS-FOUND
-           PERFORM UNTIL EOF
-               READ AccountFile
-                 AT END SET EOF TO TRUE
-                 NOT AT END
-                   IF Acc-ID = WS-ID THEN
-                     SET FOUND TO TRUE
-                     IF WS-MODE = "D" THEN
+           MOVE WS-ID TO Acc-ID
+           READ AccountFile KEY IS Acc-ID
+               INVALID KEY
+                   DISPLAY "Account not found."
+               NOT INVALID KEY
+                   IF WS-MODE = "D"
                        ADD WS-AMOUNT TO Balance
-                     ELSE
-                       SUBTRACT WS-AMOUNT FROM Balance
-                     END-IF
-                     REWRITE Account-Record
+                       REWRITE Account-Record
+                       DISPLAY "Deposit successful."
+                   ELSE
+                       IF Balance >= WS-AMOUNT
+                           SUBTRACT WS-AMOUNT FROM Balance
+                           REWRITE Account-Record
+                           DISPLAY "Withdrawal successful."
+                       ELSE
+                           DISPLAY "Insufficient funds."
+                       END-IF
                    END-IF
-           END-PERFORM
-           CLOSE AccountFile
-           IF FOUND
-             DISPLAY "Transaction complete."
-           ELSE
-             DISPLAY "Account not found."
-           END-IF.
+           END-READ
+           CLOSE AccountFile.
 
        PROCESS-DEPOSIT-FILE.
            MOVE "D" TO WS-MODE
            DISPLAY "Processing deposit file..."
            OPEN INPUT DepositFile
-           PERFORM UNTIL EOF
+           PERFORM UNTIL WS-FILE-STATUS = "10"
                READ DepositFile INTO Deposit-Line
-                 AT END SET EOF TO TRUE
-                 NOT AT END
-                   PERFORM PARSE-DEPOSIT-LINE
-                   MOVE WS-DEPOSIT-ID     TO WS-ID
-                   MOVE WS-DEP-AMOUNT-NUM TO WS-AMOUNT
-                   PERFORM UPDATE-BALANCE
+                   AT END MOVE "10" TO WS-FILE-STATUS
+                   NOT AT END
+                       PERFORM PARSE-DEPOSIT-LINE
+                       MOVE WS-DEPOSIT-ID TO WS-ID
+                       MOVE WS-DEP-AMOUNT-NUM TO WS-AMOUNT
+                       PERFORM UPDATE-BALANCE
            END-PERFORM
            CLOSE DepositFile.
 
@@ -133,3 +140,16 @@
              INTO WS-DEPOSIT-ID WS-DEPOSIT-AMOUNT
            END-UNSTRING
            MOVE FUNCTION NUMVAL(WS-DEPOSIT-AMOUNT) TO WS-DEP-AMOUNT-NUM.
+
+       DESPLAY-ACCOUNTS.
+           OPEN I-O AccountFile
+           DISPLAY "Current Accounts:"
+           PERFORM UNTIL WS-FILE-STATUS = "10"
+               READ AccountFile INTO Account-Record
+                   AT END MOVE "10" TO WS-FILE-STATUS
+                   NOT AT END
+           DISPLAY "ID: " Acc-ID " Name: " Acc-Name " Balance: " Balance
+               END-READ
+           END-PERFORM
+           CLOSE AccountFile.
+           
