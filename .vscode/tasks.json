@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build and Run COBOL",
+      "type": "shell",
+      "command": "cobc -x -o minibank.exe src/minibank.cob && minibank.exe",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
