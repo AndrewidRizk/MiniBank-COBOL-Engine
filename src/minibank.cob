@@ -12,6 +12,12 @@
            SELECT DepositFile ASSIGN TO "data/deposit_request.txt"
                ORGANIZATION IS LINE SEQUENTIAL.
 
+           SELECT StaticFile ASSIGN TO "data/static.dat"
+               ORGANIZATION IS INDEXED
+               ACCESS MODE IS DYNAMIC
+               RECORD KEY IS Static-Key
+               FILE STATUS IS WS-FILE-STATUS.
+
        DATA DIVISION.
        FILE SECTION.
        FD AccountFile.
@@ -22,6 +28,11 @@
 
        FD DepositFile.
        01 Deposit-Line     PIC X(80).
+
+       FD StaticFile.
+       01 Static-Record.
+           05 Static-Key    PIC X(20).
+           05 Static-Value  PIC X(20).
 
        WORKING-STORAGE SECTION.
        01 WS-CHOICE         PIC 9.
@@ -36,6 +47,11 @@
        01 WS-DEPOSIT-ID     PIC X(10).
        01 WS-DEPOSIT-AMOUNT PIC X(10).
        01 WS-DEP-AMOUNT-NUM PIC 9(6)V99.
+ 
+       01 WS-LAST-ID-NUMERIC   PIC 9(10).
+       01 WS-LAST-ID-STRING    PIC X(10).
+       01 WS-TEMP-KEY          PIC X(20).
+       01 WS-TEMP-VALUE        PIC X(20).
 
        PROCEDURE DIVISION.
        MAIN-LOGIC.
@@ -50,7 +66,7 @@
            DISPLAY "2. Deposit"
            DISPLAY "3. Withdraw"
            DISPLAY "4. Process Deposit File"
-           DISPLAY "5. Process Deposit File"
+           DISPLAY "5. Display Accounts"
            DISPLAY "6. Exit"
            DISPLAY "Enter Choice: "
            ACCEPT WS-CHOICE
@@ -59,7 +75,7 @@
              WHEN 2 PERFORM DEPOSIT
              WHEN 3 PERFORM WITHDRAW
              WHEN 4 PERFORM PROCESS-DEPOSIT-FILE
-             WHEN 5 PERFORM DESPLAY-ACCOUNTS
+             WHEN 5 PERFORM DISPLAY-ACCOUNTS
              WHEN 6
                DISPLAY "Goodbye!"
                STOP RUN
@@ -69,19 +85,36 @@
            PERFORM MENU-LOOP.
 
        CREATE-ACCOUNT.
-           DISPLAY "Enter Account ID: " ACCEPT WS-ID
-           DISPLAY "Enter Account Name: " ACCEPT WS-NAME
-           MOVE 0 TO Balance
-           MOVE WS-ID   TO Acc-ID
-           MOVE WS-NAME TO Acc-Name
-           OPEN I-O AccountFile
-           READ AccountFile KEY IS Acc-ID
+           MOVE "LAST-ID" TO Static-Key
+           OPEN I-O StaticFile
+
+            READ StaticFile
                INVALID KEY
-                   WRITE Account-Record
-                   DISPLAY "Account Created!"
-               NOT INVALID KEY
-                   DISPLAY "Account already exists."
+                 MOVE 1 TO WS-LAST-ID-NUMERIC
+             NOT INVALID KEY
+                MOVE FUNCTION NUMVAL(Static-Value) TO WS-LAST-ID-NUMERIC
+                 ADD 1 TO WS-LAST-ID-NUMERIC
            END-READ
+
+         MOVE FUNCTION NUMVAL-C(WS-LAST-ID-NUMERIC) TO WS-LAST-ID-STRING
+           MOVE WS-LAST-ID-STRING TO Acc-ID
+
+           *> Update static
+           MOVE WS-LAST-ID-STRING TO Static-Value
+           REWRITE Static-Record
+             INVALID KEY
+                 WRITE Static-Record
+           END-REWRITE
+           
+           CLOSE StaticFile
+
+           DISPLAY "Enter Account Name: " ACCEPT WS-NAME
+            MOVE 0 TO Balance
+           MOVE WS-NAME TO Acc-Name
+
+           OPEN I-O AccountFile
+           WRITE Account-Record
+           DISPLAY "Account Created with ID: " Acc-ID
            CLOSE AccountFile.
 
        DEPOSIT.
@@ -141,7 +174,7 @@
            END-UNSTRING
            MOVE FUNCTION NUMVAL(WS-DEPOSIT-AMOUNT) TO WS-DEP-AMOUNT-NUM.
 
-       DESPLAY-ACCOUNTS.
+       DISPLAY-ACCOUNTS.
            OPEN I-O AccountFile
            DISPLAY "Current Accounts:"
            PERFORM UNTIL WS-FILE-STATUS = "10"
@@ -152,4 +185,4 @@
                END-READ
            END-PERFORM
            CLOSE AccountFile.
-           
+           DISPLAY "============ End of Account List. ============".
