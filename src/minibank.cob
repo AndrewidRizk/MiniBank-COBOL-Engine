@@ -4,14 +4,13 @@
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-           SELECT AccountFile ASSIGN TO "accounts.dat"
+           SELECT AccountFile ASSIGN TO "data/accounts.dat"
                ORGANIZATION IS LINE SEQUENTIAL.
            SELECT DepositFile ASSIGN TO "data/deposit_request.txt"
                ORGANIZATION IS LINE SEQUENTIAL.
 
        DATA DIVISION.
        FILE SECTION.
-
        FD AccountFile.
        01 Account-Record.
            05 Acc-ID      PIC X(10).
@@ -22,19 +21,20 @@
        01 Deposit-Line   PIC X(80).
 
        WORKING-STORAGE SECTION.
-       01 WS-CHOICE        PIC 9.
-       01 WS-ID            PIC X(10).
-       01 WS-NAME          PIC X(20).
-       01 WS-AMOUNT        PIC 9(6)V99.
-       01 WS-ACTION        PIC X.
-       01 WS-END-OF-FILE   PIC X VALUE 'N'.
-          88 EOF           VALUE 'Y'.
-          88 NOT-EOF       VALUE 'N'.
-       01 WS-FOUND         PIC X VALUE 'N'.
-          88 FOUND         VALUE 'Y'.
-          88 NOT-FOUND     VALUE 'N'.
-       01 WS-DEP-ID        PIC X(10).
-       01 WS-DEP-AMOUNT    PIC X(80).
+       01 WS-CHOICE       PIC 9.
+       01 WS-ID           PIC X(10).
+       01 WS-NAME         PIC X(20).
+       01 WS-AMOUNT       PIC 9(6)V99.
+       01 WS-FILE-END     PIC X VALUE 'N'.
+          88 EOF          VALUE 'Y'.
+          88 NOT-EOF      VALUE 'N'.
+       01 WS-FOUND        PIC X VALUE 'N'.
+          88 FOUND        VALUE 'Y'.
+          88 NOT-FOUND    VALUE 'N'.
+       01 WS-MODE         PIC X.            *> "D" or "W"
+       01 WS-DEPOSIT-ID   PIC X(10).
+       01 WS-DEPOSIT-AMOUNT PIC X(10).
+       01 WS-DEP-AMOUNT-NUM PIC 9(6)V99.
 
        PROCEDURE DIVISION.
        MAIN-LOGIC.
@@ -42,84 +42,70 @@
            STOP RUN.
 
        MENU-LOOP.
-           DISPLAY "==== MiniBank Menu ===="
+           DISPLAY "=========================="
+           DISPLAY "     MiniBank System     "
+           DISPLAY "=========================="
            DISPLAY "1. Create Account"
-           DISPLAY "2. Deposit (manual)"
+           DISPLAY "2. Deposit"
            DISPLAY "3. Withdraw"
            DISPLAY "4. Process Deposit File"
            DISPLAY "5. Exit"
-           DISPLAY "Enter choice (1-5):" WITH NO ADVANCING
+           DISPLAY "Enter Choice: "
            ACCEPT WS-CHOICE
-
            EVALUATE WS-CHOICE
              WHEN 1 PERFORM CREATE-ACCOUNT
-             WHEN 2 PERFORM DO-DEPOSIT
-             WHEN 3 PERFORM DO-WITHDRAW
+             WHEN 2 PERFORM DEPOSIT
+             WHEN 3 PERFORM WITHDRAW
              WHEN 4 PERFORM PROCESS-DEPOSIT-FILE
              WHEN 5
                DISPLAY "Goodbye!"
                STOP RUN
              WHEN OTHER
-               DISPLAY "Invalid choice"
+               DISPLAY "Invalid Choice"
            END-EVALUATE
            PERFORM MENU-LOOP.
 
        CREATE-ACCOUNT.
-           DISPLAY "Enter Account ID: "    WITH NO ADVANCING
-           ACCEPT WS-ID
-           DISPLAY "Enter Account Name: "  WITH NO ADVANCING
-           ACCEPT WS-NAME
-
-           MOVE WS-ID    TO Acc-ID
-           MOVE WS-NAME  TO Acc-Name
-           MOVE 0        TO Balance
-
-           OPEN OUTPUT AccountFile
+           DISPLAY "Enter Account ID: " ACCEPT WS-ID
+           DISPLAY "Enter Account Name: " ACCEPT WS-NAME
+           MOVE 0 TO Balance
+           MOVE WS-ID   TO Acc-ID
+           MOVE WS-NAME TO Acc-Name
+           OPEN EXTEND AccountFile
            WRITE Account-Record
            CLOSE AccountFile
+           DISPLAY "Account Created!".
 
-           DISPLAY "Account created.".
-
-       DO-DEPOSIT.
-           DISPLAY "Enter Account ID: "       WITH NO ADVANCING
-           ACCEPT WS-ID
-           DISPLAY "Enter Deposit Amount: "   WITH NO ADVANCING
-           ACCEPT WS-AMOUNT
-           MOVE 'D' TO WS-ACTION
+       DEPOSIT.
+           MOVE "D" TO WS-MODE
+           DISPLAY "Enter Account ID: " ACCEPT WS-ID
+           DISPLAY "Enter Deposit Amount: " ACCEPT WS-AMOUNT
            PERFORM UPDATE-BALANCE.
 
-       DO-WITHDRAW.
-           DISPLAY "Enter Account ID: "       WITH NO ADVANCING
-           ACCEPT WS-ID
-           DISPLAY "Enter Withdraw Amount: "  WITH NO ADVANCING
-           ACCEPT WS-AMOUNT
-           MOVE 'W' TO WS-ACTION
+       WITHDRAW.
+           MOVE "W" TO WS-MODE
+           DISPLAY "Enter Account ID: " ACCEPT WS-ID
+           DISPLAY "Enter Withdraw Amount: " ACCEPT WS-AMOUNT
            PERFORM UPDATE-BALANCE.
 
        UPDATE-BALANCE.
            OPEN I-O AccountFile
-           SET NOT-FOUND   TO WS-FOUND
-           SET NOT-EOF     TO WS-END-OF-FILE
-
-           PERFORM UNTIL WS-FOUND OR EOF
-             READ AccountFile
-               AT END
-                 SET EOF TO TRUE
-               NOT AT END
-                 IF Acc-ID = WS-ID
-                   SET FOUND TO TRUE
-                   IF WS-ACTION = 'D'
-                     ADD WS-AMOUNT TO Balance
-                   ELSE
-                     SUBTRACT WS-AMOUNT FROM Balance
+           MOVE NOT-FOUND TO WS-FOUND
+           PERFORM UNTIL EOF
+               READ AccountFile
+                 AT END SET EOF TO TRUE
+                 NOT AT END
+                   IF Acc-ID = WS-ID THEN
+                     SET FOUND TO TRUE
+                     IF WS-MODE = "D" THEN
+                       ADD WS-AMOUNT TO Balance
+                     ELSE
+                       SUBTRACT WS-AMOUNT FROM Balance
+                     END-IF
+                     REWRITE Account-Record
                    END-IF
-                   REWRITE Account-Record
-                 END-IF
-             END-READ
            END-PERFORM
-
            CLOSE AccountFile
-
            IF FOUND
              DISPLAY "Transaction complete."
            ELSE
@@ -127,25 +113,23 @@
            END-IF.
 
        PROCESS-DEPOSIT-FILE.
+           MOVE "D" TO WS-MODE
            DISPLAY "Processing deposit file..."
            OPEN INPUT DepositFile
-           SET NOT-EOF TO WS-END-OF-FILE
-
            PERFORM UNTIL EOF
-             READ DepositFile INTO Deposit-Line
-               AT END
-                 SET EOF TO TRUE
-               NOT AT END
-                 PERFORM PARSE-DEPOSIT
-                 MOVE 'D' TO WS-ACTION
-                 PERFORM UPDATE-BALANCE
+               READ DepositFile INTO Deposit-Line
+                 AT END SET EOF TO TRUE
+                 NOT AT END
+                   PERFORM PARSE-DEPOSIT-LINE
+                   MOVE WS-DEPOSIT-ID     TO WS-ID
+                   MOVE WS-DEP-AMOUNT-NUM TO WS-AMOUNT
+                   PERFORM UPDATE-BALANCE
            END-PERFORM
-
            CLOSE DepositFile.
 
-       PARSE-DEPOSIT.
-           UNSTRING Deposit-Line DELIMITED BY "|"
-             INTO WS-DEP-ID WS-DEP-AMOUNT
+       PARSE-DEPOSIT-LINE.
+           UNSTRING Deposit-Line
+             DELIMITED BY "|"
+             INTO WS-DEPOSIT-ID WS-DEPOSIT-AMOUNT
            END-UNSTRING
-           MOVE FUNCTION NUMVAL(WS-DEP-AMOUNT) TO WS-AMOUNT
-           MOVE WS-DEP-ID                      TO WS-ID.
+           MOVE FUNCTION NUMVAL(WS-DEPOSIT-AMOUNT) TO WS-DEP-AMOUNT-NUM.
