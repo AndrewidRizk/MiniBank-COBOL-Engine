@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core'; 
+import { DepositFormComponent } from './components/deposit-form/deposit-form.component';
+
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [DepositFormComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

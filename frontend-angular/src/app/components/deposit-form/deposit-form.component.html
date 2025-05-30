@@ -1,0 +1,6 @@
+<h2>Deposit</h2>
+<input [(ngModel)]="account_id" placeholder="Account ID" />
+<input [(ngModel)]="amount" type="number" placeholder="Amount" />
+<button (click)="submitDeposit()">Submit Deposit</button>
+
+<p *ngIf="message">{{ message }}</p>
