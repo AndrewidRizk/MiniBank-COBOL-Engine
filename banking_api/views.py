@@ -1,0 +1,162 @@
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+import subprocess
+import os
+import re
+
+# === Helper ===
+
+def run_cobol_with_inputs(inputs):
+    input_data = "\n".join(inputs) + "\n"
+
+    try:
+        result = subprocess.run(
+            ["minibank.exe"],
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+            input=input_data,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            shell=True
+        )
+        return result.stdout
+    except subprocess.TimeoutExpired:
+        return "COBOL execution timed out"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+# === Endpoints ===
+
+@api_view(["POST"])
+def deposit_view(request):
+    acc_id = request.data.get("account_id")
+    amount = request.data.get("amount")
+
+    if not acc_id or not amount:
+        return Response({"error": "Missing fields"}, status=400)
+
+    inputs = [
+        "2", acc_id, str(amount), "8"
+    ]
+
+    cobol_output = run_cobol_with_inputs(inputs)
+
+    return Response({
+        "message": "Deposit processed.",
+        "cobol_output": cobol_output
+    }, status=201)
+
+
+@api_view(["POST"])
+def withdraw_view(request):
+    acc_id = request.data.get("account_id")
+    amount = request.data.get("amount")
+
+    if not acc_id or not amount:
+        return Response({"error": "Missing fields"}, status=400)
+
+    inputs = [
+        "3", acc_id, str(amount), "8"
+    ]
+
+    cobol_output = run_cobol_with_inputs(inputs)
+
+    return Response({
+        "message": "Withdraw processed.",
+        "cobol_output": cobol_output
+    }, status=201)
+
+
+@api_view(["POST"])
+def create_account_view(request):
+    name = request.data.get("name")
+
+    if not name:
+        return Response({"error": "Missing name"}, status=400)
+
+    inputs = [
+        "1", name, "8"
+    ]
+
+    cobol_output = run_cobol_with_inputs(inputs)
+
+    return Response({
+        "message": "Account created.",
+        "cobol_output": cobol_output
+    }, status=201)
+
+
+@api_view(["GET"])
+def account_balance_view(request, account_id):
+    inputs = [
+        "5", account_id, "8"
+    ]
+
+    cobol_output = run_cobol_with_inputs(inputs)
+
+    # Optional parse
+    match = re.search(r"Balance.*?:\s+([0-9.]+)", cobol_output)
+    balance = match.group(1) if match else "Unknown"
+
+    return Response({
+        "account_id": account_id,
+        "balance": balance,
+        "raw_output": cobol_output
+    })
+
+
+@api_view(["GET"])
+def accounts_view(request):
+    inputs = [
+        "6", "8"
+    ]
+
+    cobol_output = run_cobol_with_inputs(inputs)
+
+    return Response({
+        "accounts_output": cobol_output
+    })
+
+
+@api_view(["GET"])
+def transactions_view(request):
+    try:
+        tx_file = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "data", "transaction.dat")
+        
+        if not os.path.exists(tx_file):
+            return Response({"transactions": []})
+
+        # Example: read as binary — adjust if your transaction file is line-based
+        with open(tx_file, "rb") as f:
+            data = f.read()
+
+        return Response({
+            "transactions_raw": str(data)
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+def account_transactions_view(request, account_id):
+    try:
+        tx_file = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "data", "transaction.dat")
+        
+        if not os.path.exists(tx_file):
+            return Response({"transactions": []})
+
+        with open(tx_file, "rb") as f:
+            data = f.read()
+
+        # You can parse the transactions and filter by account_id
+        # For now, just return full data — filtering can be added later
+        return Response({
+            "account_id": account_id,
+            "transactions_raw": str(data)
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
