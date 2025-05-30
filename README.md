@@ -67,10 +67,12 @@ Example:
 
 - Mobile-friendly bank portal  
 - Sidebar layout (New User / Moving Money / Administration)  
-- Clean modern UI (inspired by CIBC / TD)  
+- Clean modern UI
 - Live account display  
 - Live transaction history  
 - Responsive (hamburger menu for mobile)
+
+
 
 ---
 
@@ -171,6 +173,12 @@ MiniBank shows how to bridge the gap between:
 Banks don't need to "rip and replace" — they can modernize step-by-step.
 
 ---
-
+## Screenshots: 
+![image](https://github.com/user-attachments/assets/7341dd2f-5720-42d7-a8d4-450b0e7262a4)
+![image](https://github.com/user-attachments/assets/f179b6f5-7072-4e09-be8e-3157f4a523c2)
+![image](https://github.com/user-attachments/assets/7df176d3-ee6c-40f4-8e13-def1546fb8c5)
+![image](https://github.com/user-attachments/assets/bcde1bca-5d9d-4dee-978e-92246275ed27)
+![image](https://github.com/user-attachments/assets/50389930-6a95-4505-ad39-09b1262f107f)
+---
 **Built with ❤️ by Andro Rizk**
 
