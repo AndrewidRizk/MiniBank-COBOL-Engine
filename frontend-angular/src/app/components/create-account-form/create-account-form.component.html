@@ -1,0 +1,5 @@
+<h2>Create Account</h2>
+<input [(ngModel)]="name" placeholder="Name" />
+<button (click)="createAccount()">Create Account</button>
+
+<p *ngIf="message">{{ message }}</p>
