@@ -1,13 +1,13 @@
-import { Component } from '@angular/core'; 
-import { DepositFormComponent } from './components/deposit-form/deposit-form.component';
-
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [DepositFormComponent],
+  standalone: true,
+  imports: [RouterOutlet, RouterModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'frontend-angular';
+  title = 'MiniBank Dashboard';
 }

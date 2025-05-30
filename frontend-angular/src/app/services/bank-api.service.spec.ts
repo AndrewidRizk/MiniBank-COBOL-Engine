@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class BankApiService {
   private apiUrl = 'http://127.0.0.1:8000/api';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   deposit(account_id: string, amount: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/deposit/`, { account_id, amount });
