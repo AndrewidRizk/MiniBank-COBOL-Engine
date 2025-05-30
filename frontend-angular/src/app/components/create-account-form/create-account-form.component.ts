@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-create-account-form',
   templateUrl: './create-account-form.component.html',
   standalone: true,
-  imports: [FormsModule, CommonModule]
+  imports: [FormsModule, CommonModule, HttpClientModule]
 })
 export class CreateAccountFormComponent {
   name = '';

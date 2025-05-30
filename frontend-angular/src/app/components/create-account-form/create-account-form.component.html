@@ -1,5 +1,18 @@
-<h2>Create Account</h2>
-<input [(ngModel)]="name" placeholder="Name" />
-<button (click)="createAccount()">Create Account</button>
+<div class="page-container">
+    <h1 class="page-title">Create Account</h1>
 
-<p *ngIf="message">{{ message }}</p>
+    <div class="card"> 
+
+        <form (ngSubmit)="createAccount()">
+            <div class="form-group">
+                <label for="account_name">Account Name</label>
+                <input id="account_name" [(ngModel)]="name" name="account_name" required />
+
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Account</button>
+
+            <p *ngIf="message">{{ message }}</p>
+        </form>
+    </div>
+</div>

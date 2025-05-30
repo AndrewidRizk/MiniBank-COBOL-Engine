@@ -1,0 +1,73 @@
+/* Wrapper and Sidebar */
+#sidebar-wrapper {
+    width: 250px;
+    background-color: #f8f9fa; /* Light gray */
+    border-right: 1px solid #ddd;
+    transition: all 0.3s;
+    padding-top: 1rem;
+    height: 100vh;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+@media (max-width: 767.98px) {
+    #sidebar-wrapper {
+        margin-left: -250px;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
+
+.sidebar-heading {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #b10d1e; /* CIBC Red */
+    padding-left: 1rem;
+}
+
+.list-group-item {
+    border: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.list-group-item:hover {
+    background-color: #e9ecef;
+    color: #b10d1e; /* CIBC Red on hover */
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 1rem;
+}
+
+.page-container {
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Menu toggle button */
+#menu-toggle {
+    margin-bottom: 1rem;
+}

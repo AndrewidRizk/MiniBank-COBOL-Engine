@@ -1,6 +1,22 @@
-<h2>Deposit</h2>
-<input [(ngModel)]="account_id" placeholder="Account ID" />
-<input [(ngModel)]="amount" type="number" placeholder="Amount" />
-<button (click)="submitDeposit()">Submit Deposit</button>
+<div class="page-container">
+    <h1 class="page-title">Deposit</h1>
 
-<p *ngIf="message">{{ message }}</p>
+    <div class="card"> 
+
+        <form (ngSubmit)="submitDeposit()">
+            <div class="form-group">
+                <label for="account_id">Account ID</label>
+                <input type="text" id="account_id" [(ngModel)]="account_id" name="account_id" required />
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" [(ngModel)]="amount" name="amount" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Deposit</button>
+
+            <p *ngIf="message">{{ message }}</p>
+        </form>
+    </div>
+</div>

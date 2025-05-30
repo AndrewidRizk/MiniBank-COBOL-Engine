@@ -1,0 +1,38 @@
+<div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="border-end bg-white" id="sidebar-wrapper">
+        <div class="sidebar-heading border-bottom bg-light">MiniBank</div>
+        <div class="list-group list-group-flush">
+
+            <!-- Section 1: New User -->
+            <div class="p-2 text-secondary fw-bold">New User</div>
+            <a routerLink="/create-account" class="list-group-item list-group-item-action">Create Account</a>
+
+            <!-- Section 2: Moving Money -->
+            <div class="p-2 text-secondary fw-bold mt-3">Moving Money</div>
+            <a routerLink="/deposit" class="list-group-item list-group-item-action">Deposit</a>
+            <a routerLink="/withdraw" class="list-group-item list-group-item-action">Withdraw</a>
+
+            <!-- Section 3: Administration -->
+            <div class="p-2 text-secondary fw-bold mt-3">Administration</div>
+            <a routerLink="/accounts" class="list-group-item list-group-item-action">Accounts</a>
+            <a routerLink="/transactions" class="list-group-item list-group-item-action">Transactions</a>
+
+        </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper" class="w-100 page-container">
+
+        <!-- Menu toggle (hamburger) button for mobile -->
+        <button class="btn btn-primary d-md-none" id="menu-toggle">☰ Menu</button>
+
+        <!-- Dynamic content will load here -->
+        <router-outlet></router-outlet>
+
+    </div>
+    <!-- /#page-content-wrapper -->
+
+</div>
