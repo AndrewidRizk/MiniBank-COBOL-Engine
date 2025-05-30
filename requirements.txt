@@ -1,0 +1,7 @@
+# Django backend requirements
+
+Django==5.2.1
+djangorestframework==3.15.1
+
+# Optional: if you use CORS (common for Angular frontend)
+django-cors-headers==4.3.1
