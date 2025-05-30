@@ -1,5 +1,4 @@
-from django.urls import path
-from .views import DepositRequestView
+from django.urls import path 
 
 from . import views
 

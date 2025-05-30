@@ -91,18 +91,18 @@ def create_account_view(request):
 @api_view(["GET"])
 def account_balance_view(request, account_id):
     inputs = [
-        "5", account_id, "8"
+        "5", account_id
     ]
 
     cobol_output = run_cobol_with_inputs(inputs)
 
     # Optional parse
-    match = re.search(r"Balance.*?:\s+([0-9.]+)", cobol_output)
-    balance = match.group(1) if match else "Unknown"
+    #match = re.search(r"Balance.*?:\s+([0-9.]+)", cobol_output)
+    #balance = match.group(1) if match else "Unknown"
 
     return Response({
         "account_id": account_id,
-        "balance": balance,
+        "balance": cobol_output,
         "raw_output": cobol_output
     })
 
