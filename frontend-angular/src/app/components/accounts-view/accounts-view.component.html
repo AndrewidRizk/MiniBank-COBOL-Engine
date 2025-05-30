@@ -1,13 +1,17 @@
-<div class="page-container">
-    <h1 class="page-title">Accounts</h1>
+<div class="container mt-4">
+  <h2 class="mb-3">All Accounts</h2>
 
-    <div class="card">
-        <h2 class="card-title">All Accounts</h2>
+  <div *ngIf="accounts.length === 0" class="alert alert-info">
+    No accounts found.
+  </div>
 
-        <ul>
-            <li *ngFor="let acc of accounts">
-                ID: {{ acc.id }} | Name: {{ acc.name }} | Balance: {{ acc.balance }}
-            </li>
-        </ul>
+  <div *ngFor="let acc of accounts" class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title text-success">{{ acc.name }}</h5>
+      <p class="card-text">
+        <strong>Account ID:</strong> {{ acc.account_id }}<br>
+        <strong>Balance:</strong> {{ acc.balance }}
+      </p>
     </div>
+  </div>
 </div>

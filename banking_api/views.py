@@ -9,11 +9,11 @@ import re
 
 def run_cobol_with_inputs(inputs):
     input_data = "\n".join(inputs) + "\n"
-
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    run_bat_path = os.path.join(root_dir, "run.bat")
     try:
         result = subprocess.run(
-            ["minibank.exe"],
-            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+            [run_bat_path], 
             input=input_data,
             capture_output=True,
             text=True,
@@ -33,7 +33,7 @@ def run_cobol_with_inputs(inputs):
 def deposit_view(request):
     acc_id = request.data.get("account_id")
     amount = request.data.get("amount")
-
+    print(f"Deposit request: acc_id={acc_id}, amount={amount}")
     if not acc_id or not amount:
         return Response({"error": "Missing fields"}, status=400)
 
@@ -106,38 +106,60 @@ def account_balance_view(request, account_id):
         "raw_output": cobol_output
     })
 
+ 
 
 @api_view(["GET"])
 def accounts_view(request):
-    inputs = [
-        "6", "8"
-    ]
+    output = run_cobol_with_inputs(["6"])
 
-    cobol_output = run_cobol_with_inputs(inputs)
+    # REGEX to match account lines
+    account_pattern = re.compile(
+        r"ID:\s*(\d+)\s+Name:\s*(.*?)\s+Balance:\s*([\d\.]+)"
+    )
 
-    return Response({
-        "accounts_output": cobol_output
-    })
+    accounts = []
+
+    for match in account_pattern.finditer(output):
+        account_id, name, balance = match.groups()
+        accounts.append({
+            "account_id": account_id,
+            "name": name,
+            "balance": float(balance)
+        })
+
+    return Response({"accounts": accounts})
+
+
 
 
 @api_view(["GET"])
 def transactions_view(request):
-    try:
-        tx_file = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "data", "transaction.dat")
-        
-        if not os.path.exists(tx_file):
-            return Response({"transactions": []})
+    output = run_cobol_with_inputs(["8"])
 
-        # Example: read as binary — adjust if your transaction file is line-based
-        with open(tx_file, "rb") as f:
-            data = f.read()
+    # REGEX to match transaction blocks
+    txn_pattern = re.compile(
+        r"Transaction ID:\s*(\d+)\s*"
+        r"Account ID:\s*(.*?)\s*"
+        r"Amount:\s*([\d\.]+)\s*"
+        r"Date/Time:\s*(.*?)\s*"
+        r"Type:\s*(\w+)",
+        re.DOTALL
+    )
 
-        return Response({
-            "transactions_raw": str(data)
+    transactions = []
+
+    for match in txn_pattern.finditer(output):
+        txn_id, account_id, amount, date_time, txn_type = match.groups()
+        transactions.append({
+            "transaction_id": txn_id,
+            "account_id": account_id,
+            "amount": float(amount),
+            "date_time": date_time,
+            "type": txn_type
         })
+    print(f"Transactions found: {transactions}")
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return Response({"transactions": transactions})
 
 
 @api_view(["GET"])

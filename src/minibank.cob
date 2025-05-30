@@ -80,19 +80,6 @@
            STOP RUN.
 
        MENU-LOOP.
-           DISPLAY "=========================="
-           DISPLAY "     MiniBank System     "
-           DISPLAY "=========================="
-           DISPLAY "1. Create Account"
-           DISPLAY "2. Deposit"
-           DISPLAY "3. Withdraw"
-           DISPLAY "4. Process Deposit File"
-           DISPLAY "5. Balance Check"
-           DISPLAY "6. Display Accounts"
-           DISPLAY "7. Delete Account"
-           DISPLAY "8. Transaction Log View"
-           DISPLAY "9. Exit"
-           DISPLAY "Enter Choice: "
            ACCEPT WS-CHOICE
            EVALUATE WS-CHOICE
              WHEN 1 PERFORM CREATE-ACCOUNT
@@ -106,8 +93,6 @@
              WHEN 9
                DISPLAY "Goodbye!"
                STOP RUN
-             WHEN OTHER
-               DISPLAY "Invalid Choice"
            END-EVALUATE
            PERFORM MENU-LOOP.
 

@@ -1,13 +1,19 @@
-<div class="page-container">
-    <h1 class="page-title">Transactions</h1>
+<div class="container mt-4">
+  <h2 class="mb-3">Transaction History</h2>
 
-    <div class="card">
-        <h2 class="card-title">Transaction History</h2>
+  <div *ngIf="transactions.length === 0" class="alert alert-info">
+    No transactions found.
+  </div>
 
-        <ul>
-            <li *ngFor="let txn of transactions">
-                {{ txn.date }} - {{ txn.type }} - Account: {{ txn.account }} - Amount: {{ txn.amount }}
-            </li>
-        </ul>
+  <div *ngFor="let txn of transactions" class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title text-primary">Transaction #{{ txn.transaction_id }}</h5>
+      <p class="card-text">
+        <strong>Type:</strong> {{ txn.type }}<br>
+        <strong>Account:</strong> {{ txn.account_id }}<br>
+        <strong>Amount:</strong> {{ txn.amount }}<br>
+        <strong>Date/Time:</strong> {{ txn.date_time }}
+      </p>
     </div>
+  </div>
 </div>

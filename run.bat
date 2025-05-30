@@ -11,5 +11,4 @@ cobc -x -o minibank.exe src\minibank.cob
 
 echo Running program...
  
-minibank.exe
-pause
+minibank.exe 

@@ -14,9 +14,9 @@ export class AccountsViewComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/api/accounts/')
-      .subscribe(data => {
-        this.accounts = data;
-      });
+this.http.get<any>('http://127.0.0.1:8000/api/accounts/')
+    .subscribe(data => {
+      this.accounts = data.accounts;  // not 'data' directly!
+    });
   }
 }
